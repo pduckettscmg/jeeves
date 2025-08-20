@@ -1,5 +1,7 @@
 // index.mjs
 import 'dotenv/config';
+import { startScheduleFlow, isScheduleMessage, isScheduleSessionMessage } from './scheduler.mjs';
+
 import {
   Client,
   GatewayIntentBits,
@@ -43,6 +45,8 @@ function buildInviteURL() {
   return `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&permissions=${perms.bitfield}&scope=${scope}`;
 }
 
+if (content === '!pong') { await msg.reply('ping'); return; }
+
 // ---- Message router
 client.on('messageCreate', async (msg) => {
   try {
@@ -50,7 +54,7 @@ client.on('messageCreate', async (msg) => {
     const content = msg.content.trim();
 
     // --- AI semantic chat: !jeeves <message>
-    if (content.toLowerCase().startsWith('!jeeves ')) {
+    if (content.toLowerCase().startsWith('!jeeves')) {
       const text = content.replace(/^!jeeves\s+/i, '');
       const reply = await jeevesReply({
         text,
@@ -62,14 +66,15 @@ client.on('messageCreate', async (msg) => {
     }
 
     // --- Scheduling flow (requires continuation)
-    if (content.startsWith('!schedule') || isScheduleMessage?.(content)) {
-      await startScheduleFlow({
-        client,
-        message: msg,
-        zapierHook: ZAPIER_SCHEDULE_HOOK,
-      });
-      return;
-    }
+    if (
+  content.startsWith('!schedule') ||
+  isScheduleMessage?.(content) ||
+  isScheduleSessionMessage?.(msg)
+) {
+  await startScheduleFlow({ client, message: msg, zapierHook: ZAPIER_SCHEDULE_HOOK });
+  return;
+}
+
 
     // --- Invite flow
     if (content.startsWith('!invite')) {

@@ -22,6 +22,13 @@ async function promptNext(message, session) {
 }
 
 // Entry point
+
+// Returns true if the author is mid-scheduling in this channel
+export function isScheduleSessionMessage(message) {
+  const s = sessions.get(message.author.id);
+  return !!s && s.channelId === message.channel.id;
+}
+
 export async function startScheduleFlow({ client, message, zapierHook }) {
   const userId = message.author.id;
 
@@ -31,6 +38,13 @@ export async function startScheduleFlow({ client, message, zapierHook }) {
     await promptNext(message, sessions.get(userId));
     return;
   }
+
+  if (/^cancel$/i.test(input)) {
+  sessions.delete(userId);
+  await message.reply('Scheduling canceled.');
+  return;
+}
+
 
   // Continue existing session
   const session = sessions.get(userId);
