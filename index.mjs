@@ -1,4 +1,4 @@
-// Entry for Jeeves (ESM, discord.js v14)
+// index.mjs
 import 'dotenv/config';
 import {
   Client,
@@ -9,6 +9,7 @@ import {
 
 import { startScheduleFlow, isScheduleMessage } from './scheduler.mjs';
 import { startInviteFlow } from './invite.mjs';
+import { jeevesReply } from './aiClient.mjs';
 
 const {
   BOT_TOKEN,
@@ -48,6 +49,19 @@ client.on('messageCreate', async (msg) => {
     if (!msg.guild || msg.author.bot) return;
     const content = msg.content.trim();
 
+    // --- AI semantic chat: !jeeves <message>
+    if (content.toLowerCase().startsWith('!jeeves ')) {
+      const text = content.replace(/^!jeeves\s+/i, '');
+      const reply = await jeevesReply({
+        text,
+        userName: msg.author.username,
+        channelName: msg.channel?.name,
+      });
+      await msg.reply(reply);
+      return;
+    }
+
+    // --- Scheduling flow (requires continuation)
     if (content.startsWith('!schedule') || isScheduleMessage?.(content)) {
       await startScheduleFlow({
         client,
@@ -57,6 +71,7 @@ client.on('messageCreate', async (msg) => {
       return;
     }
 
+    // --- Invite flow
     if (content.startsWith('!invite')) {
       await startInviteFlow({
         message: msg,
@@ -65,6 +80,7 @@ client.on('messageCreate', async (msg) => {
       return;
     }
 
+    // --- Invite URL helper
     if (content.startsWith('!inviteurl')) {
       await msg.reply(buildInviteURL());
       return;
