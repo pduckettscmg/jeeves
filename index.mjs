@@ -8,8 +8,6 @@ import {
   Partials,
   PermissionsBitField,
 } from 'discord.js';
-
-import { startScheduleFlow, isScheduleMessage } from './scheduler.mjs';
 import { startInviteFlow } from './invite.mjs';
 import { jeevesReply } from './aiClient.mjs';
 
@@ -45,7 +43,13 @@ function buildInviteURL() {
   return `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&permissions=${perms.bitfield}&scope=${scope}`;
 }
 
-if (content === '!pong') { await msg.reply('ping'); return; }
+export async function pingpong(msg) {
+  const content = msg.content.trim();
+  if (content === '!pong') {
+    await msg.reply('ping');
+    return;
+  }
+}
 
 // ---- Message router
 client.on('messageCreate', async (msg) => {
